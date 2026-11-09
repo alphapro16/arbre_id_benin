@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Arbre-ID Bénin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+:root{--bg:#f4f7f2;--card:#fff;--tx:#1b2a1d;--mu:#5b6b5d;--bd:#dce5d9;--g:#2e8b3d;--o:#e8890c;--r:#d23a3a;--ac:#1f6f32;--on:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a14;--card:#1b261d;--tx:#e8f0e6;--mu:#9db1a0;--bd:#2d3d30;--ac:#4fb866;--on:#0d1a10;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121a14;--card:#1b261d;--tx:#e8f0e6;--mu:#9db1a0;--bd:#2d3d30;--ac:#4fb866;--on:#0d1a10;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:70px}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--ac);color:var(--on);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{font-size:18px;margin:0;flex:1}header small{opacity:.85}
+main{max-width:1000px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 10px}label{display:block;font-size:13px;color:var(--mu);margin:8px 0 3px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
+button{border:0;border-radius:10px;padding:11px 14px;background:var(--ac);color:var(--on);font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;color:var(--mu);border-radius:0;font-size:13px}nav button.on{color:var(--ac);box-shadow:inset 0 3px var(--ac)}
+.v{display:none}.v.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}.kpi b{font-size:26px;display:block}.kpi span{color:var(--mu);font-size:12px}
+.dash{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:14px}@media(max-width:760px){.dash{grid-template-columns:1fr}}
+.st{display:inline-block;padding:2px 10px;border-radius:99px;color:#fff;font-size:12px;font-weight:600}
+.vivant{background:var(--g)}.malade{background:var(--o)}.mort{background:var(--r)}
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.big button{padding:16px 4px;color:#fff}
+.li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer;gap:8px}
+.qr{width:180px;margin:8px auto;background:#fff;padding:6px;border-radius:8px}.qr svg{width:100%;height:auto;display:block}
+video{width:100%;border-radius:10px;background:#000;max-height:300px}img.th{width:64px;height:64px;object-fit:cover;border-radius:8px}
+.al{border-left:4px solid var(--r);padding:6px 10px;margin:6px 0;background:var(--bg);border-radius:6px}
+#toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:99px;opacity:0;transition:.3s;pointer-events:none;z-index:9;max-width:90%}
+#toast.on{opacity:1}svg.map{width:100%;max-width:340px;display:block;margin:auto}svg.map circle{cursor:pointer}
+@media print{header,nav,.noprint{display:none!important}.v{display:none!important}#dash{display:block!important}}
+</style></head><body>
+<header><h1>🌳 Arbre-ID Bénin <small id="net"></small></h1><button class="sec" id="off" style="color:var(--on);border-color:var(--on)">Simuler hors ligne</button></header>
+<main>
+<section class="v on" id="terrain">
+ <div class="card"><h2>Nouvel arbre planté</h2>
+  <div class="row"><div><label>Espèce</label><select id="nEsp"></select></div><div><label>Zone</label><select id="nZone"></select></div></div>
+  <div class="row"><div><label>Date de plantation</label><input type="date" id="nDate"></div><div><label>Photo</label><input type="file" accept="image/*" capture="environment" id="nPhoto"></div></div>
+  <div class="row" style="margin-top:10px"><button class="sec" id="gps">📍 Position GPS</button><button id="add">Créer + générer le QR</button></div>
+  <small id="gpsInfo" style="color:var(--mu)">Position : non relevée (centre de la zone utilisé par défaut)</small>
+ </div>
+ <div class="card"><h2>Retrouver un arbre</h2><input id="q" placeholder="Identifiant, ex. BJ-0012"><div id="list"></div></div>
+</section>
+<section class="v" id="scan">
+ <div class="card"><h2>Scanner un QR code</h2><video id="vid" playsinline muted></video>
+  <div class="row" style="margin-top:8px"><button id="cam">Activer la caméra</button><button class="sec" id="stop">Arrêter</button></div>
+  <label>Secours : saisie manuelle de l’identifiant</label><div class="row"><input id="man" placeholder="BJ-0001"><button id="go" style="flex:0 0 auto">Ouvrir</button></div></div>
+ <div class="card"><h2>Arbre-test pour la démo</h2><p style="color:var(--mu);margin:0">Scannez ce QR avec la caméra d’un autre appareil.</p><div class="qr" id="tq"></div><p id="tid" style="text-align:center;margin:0"></p><button class="sec" id="tn" style="width:100%;margin-top:8px">Autre arbre-test</button></div>
+</section>
+<section class="v" id="fiche"></section>
+<section class="v" id="dash">
+ <div class="kpis" id="kpis"></div>
+ <div class="dash"><div class="card"><h2>Carte (contour simplifié)</h2><div id="map"></div><div id="pt" style="margin-top:8px;min-height:40px"></div><small style="color:var(--mu)"><span class="st vivant">vivant</span> <span class="st malade">malade</span> <span class="st mort">mort</span></small></div>
+ <div><div class="card"><h2>⚠️ Alertes mortalité</h2><div id="alerts"></div></div>
+ <div class="card"><h2>Taux de survie par zone</h2><canvas id="c1" height="170"></canvas></div></div></div>
+ <div class="row"><div class="card"><h2>Par espèce</h2><canvas id="c2" height="190"></canvas></div><div class="card"><h2>Par date de plantation</h2><canvas id="c3" height="190"></canvas></div></div>
+ <div class="card noprint"><h2>Export</h2><div class="row"><button id="csv">Exporter CSV</button><button class="sec" id="pdf">Imprimer / PDF</button><button class="sec" id="rst">Réinitialiser la démo</button></div><textarea id="csvt" rows="5" style="display:none;margin-top:8px" readonly></textarea></div>
+</section>
+</main>
+<nav><button data-v="terrain" class="on">➕<br>Terrain</button><button data-v="scan">📷<br>Scanner</button><button data-v="dash">📊<br>Pilotage</button></nav>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const Z={"Cotonou":[6.37,2.39,.10],"Abomey-Calavi":[6.45,2.35,.12],"Porto-Novo":[6.50,2.63,.10],"Ouidah":[6.36,2.09,.15],"Bohicon":[7.18,2.07,.20],"Parakou":[9.34,2.63,.35],"Djougou":[9.71,1.67,.30],"Natitingou":[10.30,1.38,.40]};
+const S={"Teck":.12,"Acacia":.20,"Neem":.08,"Manguier":.18,"Moringa":.25,"Fromager":.30,"Iroko":.28};
+const COL={vivant:"#2e8b3d",malade:"#e8890c",mort:"#d23a3a"};
+const today=()=>new Date().toISOString().slice(0,10);
+function load(){try{const x=localStorage.getItem("arbreid.v1");return x?JSON.parse(x):null}catch(e){return null}}
+function save(){try{localStorage.setItem("arbreid.v1",JSON.stringify(T))}catch(e){}}
+function gen(){let a=42;const R=()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+ const zs=Object.keys(Z),ss=Object.keys(S),o=[];
+ for(let i=1;i<=420;i++){const z=zs[Math.floor(R()*zs.length)],s=ss[Math.floor(R()*ss.length)],[la,lo,zb]=Z[z],pd=(zb+S[s])*.7,r=R(),e=r<pd?"mort":r<pd+.12?"malade":"vivant";
+  const m=Math.floor(R()*16),y=2025+Math.floor((5+m)/12),mo=(5+m)%12+1,d=y+"-"+String(mo).padStart(2,"0")+"-"+String(1+Math.floor(R()*27)).padStart(2,"0");
+  const rel=[{d,etat:"vivant",com:"Plantation",sync:true}];if(e!=="vivant")rel.push({d:"2026-10-"+String(1+Math.floor(R()*28)).padStart(2,"0"),etat:e,com:"Contrôle de tournée",sync:true});
+  o.push({id:"BJ-"+String(i).padStart(4,"0"),esp:s,zone:z,date:d,lat:la+(R()-.5)*.3,lon:lo+(R()-.5)*.3,etat:e,rel})}
+ return o}
+let T=load();if(!T||!T.length){T=gen();save()}
+let off=false,pend=null,sel=null;const net=()=>off||!navigator.onLine,byId=id=>T.find(t=>t.id===id);
+function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2600)}
+function qr(id){try{const q=qrcode(0,"M");q.addData("ARBREID:"+id);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){return"<p>QR indisponible</p>"}}
+function photo(f,cb){if(!f)return cb(null);const r=new FileReader;r.onload=()=>{const i=new Image;i.onload=()=>{const c=document.createElement("canvas"),k=Math.min(1,160/Math.max(i.width,i.height));c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);cb(c.toDataURL("image/jpeg",.6))};i.onerror=()=>cb(null);i.src=r.result};r.readAsDataURL(f)}
+function netUI(){const p=T.reduce((n,t)=>n+t.rel.filter(r=>!r.sync).length,0);$("#net").textContent=(net()?"● hors ligne":"● en ligne")+(p?" · "+p+" à synchroniser":"");$("#off").textContent=off?"Revenir en ligne":"Simuler hors ligne"}
+function sync(){let n=0;T.forEach(t=>t.rel.forEach(r=>{if(!r.sync){r.sync=true;n++}}));save();netUI();if(n)toast(n+" saisie(s) synchronisée(s)");dash()}
+$("#off").onclick=()=>{off=!off;netUI();if(!net())sync()};addEventListener("online",()=>{if(!off)sync()});addEventListener("offline",netUI);
+function show(v){document.querySelectorAll(".v").forEach(e=>e.classList.toggle("on",e.id===v));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));if(v!=="scan")stopScan();if(v==="dash")dash();if(v==="terrain")list();scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+$("#nEsp").innerHTML=Object.keys(S).map(s=>"<option>"+s+"</option>").join("");$("#nZone").innerHTML=Object.keys(Z).map(s=>"<option>"+s+"</option>").join("");$("#nDate").value=today();
+let gp=null;$("#gps").onclick=()=>{if(!navigator.geolocation)return toast("GPS indisponible");navigator.geolocation.getCurrentPosition(p=>{gp=[p.coords.latitude,p.coords.longitude];$("#gpsInfo").textContent="Position : "+gp[0].toFixed(5)+", "+gp[1].toFixed(5)},()=>toast("GPS refusé : centre de la zone utilisé"),{enableHighAccuracy:true,timeout:8000})};
+$("#add").onclick=()=>{photo($("#nPhoto").files[0],ph=>{const z=$("#nZone").value,c=Z[z],id="BJ-"+String(T.reduce((m,t)=>Math.max(m,+t.id.slice(3)),0)+1).padStart(4,"0"),pos=gp||[c[0]+(Math.random()-.5)*.1,c[1]+(Math.random()-.5)*.1],d=$("#nDate").value||today();
+ T.push({id,esp:$("#nEsp").value,zone:z,date:d,lat:pos[0],lon:pos[1],etat:"vivant",photo:ph,rel:[{d,etat:"vivant",com:"Plantation"+(gp?"":" (position estimée)"),photo:ph,sync:!net()}]});save();gp=null;$("#nPhoto").value="";$("#gpsInfo").textContent="Position : non relevée (centre de la zone utilisé par défaut)";netUI();toast("Arbre "+id+" créé");fiche(id)})};
+function badge(e){return'<span class="st '+e+'">'+e+"</span>"}
+function list(){const q=$("#q").value.trim().toUpperCase(),a=(q?T.filter(t=>t.id.includes(q)||t.esp.toUpperCase().includes(q)||t.zone.toUpperCase().includes(q)):T.slice().reverse()).slice(0,8);
+ $("#list").innerHTML=a.map(t=>'<div class="li" data-id="'+t.id+'"><span><b>'+t.id+"</b> · "+esc(t.esp)+" · "+esc(t.zone)+"</span>"+badge(t.etat)+"</div>").join("")||"<p>Aucun résultat</p>"}
+$("#q").oninput=list;$("#list").onclick=e=>{const l=e.target.closest(".li");if(l)fiche(l.dataset.id)};
+function fiche(id){const t=byId(id);if(!t)return toast("Arbre introuvable : "+id);pend=null;
+ $("#fiche").innerHTML='<div class="card"><button class="sec" id="back">← Retour</button><h2 style="margin-top:12px">'+t.id+" "+badge(t.etat)+"</h2><p style=\"margin:0;color:var(--mu)\">"+esc(t.esp)+" · "+esc(t.zone)+" · planté le "+t.date+"<br>GPS "+t.lat.toFixed(4)+", "+t.lon.toFixed(4)+'</p><div class="qr">'+qr(t.id)+'</div><div class="row noprint"><button class="sec" onclick="print()">🖨️ Imprimer l’étiquette</button></div></div>'+
+ '<div class="card"><h2>Mettre à jour l’état</h2><div class="big"><button class="vivant" data-e="vivant">Vivant</button><button class="malade" data-e="malade">Malade</button><button class="mort" data-e="mort">Mort</button></div><label>Commentaire</label><textarea id="com" rows="2"></textarea><label>Photo</label><input type="file" accept="image/*" capture="environment" id="rp"></div>'+
+ '<div class="card"><h2>Historique</h2>'+t.rel.slice().reverse().map(r=>'<div class="li" style="cursor:default"><span>'+r.d+" · "+esc(r.com||"")+(r.sync?"":" ⏳")+"</span>"+(r.photo?'<img class="th" src="'+r.photo+'">':"")+badge(r.etat)+"</div>").join("")+"</div>";
+ show("fiche");$("#back").onclick=()=>show("terrain");$("#rp").onchange=e=>photo(e.target.files[0],p=>pend=p);
+ document.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{t.etat=b.dataset.e;t.rel.push({d:today(),etat:t.etat,com:$("#com").value,photo:pend,sync:!net()});save();netUI();toast(net()?"État enregistré hors ligne : synchro à la reconnexion":"État mis à jour : "+t.etat);fiche(id)})}
+let stream,raf;function stopScan(){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+$("#stop").onclick=stopScan;
+$("#cam").onclick=async()=>{try{stopScan();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});const v=$("#vid");v.srcObject=stream;await v.play();const c=document.createElement("canvas"),x=c.getContext("2d",{willReadFrequently:true});
+ const loop=()=>{if(v.videoWidth){c.width=v.videoWidth;c.height=v.videoHeight;x.drawImage(v,0,0);const r=jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height);if(r){const id=r.data.replace("ARBREID:","").trim();if(byId(id)){stopScan();return fiche(id)}}}raf=requestAnimationFrame(loop)};loop()}catch(e){toast("Caméra indisponible : saisissez l’identifiant")}};
+$("#go").onclick=()=>{const id=$("#man").value.trim().toUpperCase();if(id)fiche(id)};
+function testQ(){const t=T[Math.floor(Math.random()*T.length)];$("#tq").innerHTML=qr(t.id);$("#tid").textContent=t.id;$("#tid").onclick=()=>fiche(t.id)}$("#tn").onclick=testQ;testQ();
+const P=(la,lo)=>[((lo-.9)*100).toFixed(1),((12.5-la)*100).toFixed(1)];
+const OUT="1.62,6.28 2.7,6.26 2.72,6.7 2.78,7.3 2.68,8.0 2.75,9.0 3.1,9.9 3.85,10.6 3.6,11.7 3.1,12.4 2.4,11.9 1.9,11.4 1.4,11.0 1.45,10.0 1.6,9.0 1.7,7.6".split(" ").map(p=>{const[o,a]=p.split(",");return P(+a,+o).join(",")}).join(" ");
+const CH={};function chart(id,type,labels,data,col){if(CH[id])CH[id].destroy();const cs=getComputedStyle(document.documentElement);Chart.defaults.color=cs.getPropertyValue("--mu");Chart.defaults.borderColor=cs.getPropertyValue("--bd");
+ CH[id]=new Chart($("#"+id),{type,data:{labels,datasets:[{data,backgroundColor:col,borderColor:col,tension:.3}]},options:{indexAxis:type==="bar"?"y":"x",plugins:{legend:{display:false}},scales:{[type==="bar"?"x":"y"]:{min:0,max:100,title:{display:true,text:"Survie (%)"}}}}})}
+const grp=k=>{const g={};T.forEach(t=>{const x=k(t);(g[x]=g[x]||{n:0,m:0,k:0}).n++;if(t.etat==="mort")g[x].m++;if(t.etat!=="vivant")g[x].k++});return g};
+const sv=g=>Object.entries(g).sort((a,b)=>a[0]<b[0]?-1:1).map(([k,v])=>[k,Math.round(100*(v.n-v.m)/v.n),v]);
+function dash(){const n=T.length,m=T.filter(t=>t.etat==="mort").length,s=T.filter(t=>t.etat==="malade").length,p=T.reduce((a,t)=>a+t.rel.filter(r=>!r.sync).length,0);
+ $("#kpis").innerHTML=[["Arbres plantés",n],["Taux de survie",Math.round(100*(n-m)/n)+" %"],["Arbres à surveiller",s+" malades"],["Arbres morts",m],["À synchroniser",p]].map(k=>'<div class="kpi"><b>'+k[1]+"</b><span>"+k[0]+"</span></div>").join("");
+ $("#map").innerHTML='<svg class="map" viewBox="0 0 320 640"><polygon points="'+OUT+'" fill="none" stroke="var(--mu)" stroke-width="1.5" stroke-dasharray="4 3"/>'+T.map(t=>{const[x,y]=P(t.lat,t.lon);return'<circle cx="'+x+'" cy="'+y+'" r="3" fill="'+COL[t.etat]+'" data-id="'+t.id+'"/>'}).join("")+"</svg>";
+ const zs=sv(grp(t=>t.zone)),al=zs.filter(z=>z[2].n>=10&&z[2].m/z[2].n>.25).sort((a,b)=>a[1]-b[1]);
+ $("#alerts").innerHTML=al.map(z=>'<div class="al"><b>'+esc(z[0])+"</b> : "+Math.round(100*z[2].m/z[2].n)+" % de mortalité ("+z[2].m+"/"+z[2].n+") — replantation à prioriser</div>").join("")||"Aucune zone au-dessus de 25 % de mortalité.";
+ const bc=zs.map(z=>z[1]<70?COL.mort:z[1]<85?COL.malade:COL.vivant);chart("c1","bar",zs.map(z=>z[0]),zs.map(z=>z[1]),bc);
+ const es=sv(grp(t=>t.esp));chart("c2","bar",es.map(z=>z[0]),es.map(z=>z[1]),"#2e8b3d");
+ const ds=sv(grp(t=>t.date.slice(0,7)));chart("c3","line",ds.map(z=>z[0]),ds.map(z=>z[1]),"#2e8b3d")}
+$("#map").onclick=e=>{const c=e.target.closest("circle");if(!c)return;const t=byId(c.dataset.id);$("#pt").innerHTML="<b>"+t.id+"</b> · "+esc(t.esp)+" · "+esc(t.zone)+" "+badge(t.etat)+' <button class="sec" style="padding:4px 10px" id="op">Ouvrir</button>';$("#op").onclick=()=>fiche(t.id)};
+$("#csv").onclick=()=>{const rows=[["id","espece","zone","date_plantation","latitude","longitude","etat"]].concat(T.map(t=>[t.id,t.esp,t.zone,t.date,t.lat.toFixed(5),t.lon.toFixed(5),t.etat])),txt=rows.map(r=>r.join(";")).join("\n");
+ try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+txt],{type:"text/csv"}));a.download="arbre-id-benin.csv";a.click()}catch(e){}
+ const t=$("#csvt");t.style.display="block";t.value=txt;t.select();try{document.execCommand("copy");toast("CSV copié dans le presse-papiers")}catch(e){}};
+$("#pdf").onclick=()=>{try{print()}catch(e){toast("Impression indisponible")}};
+$("#rst").onclick=()=>{T=gen();save();netUI();dash();testQ();toast("Données de démonstration régénérées")};
+netUI();list();
+</script></body></html>
